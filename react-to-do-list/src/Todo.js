@@ -50,7 +50,7 @@ class Todo extends Component {
         this.setState({toDoList: updatedList});
     };
 
-    onRemoveButton = (index) => {
+    onRemove = (index) => {
         const {toDoList} = this.state;
         const updateList = toDoList.filter((item, i, arr) => arr[i] !== arr[index]);
         this.setState({toDoList: updateList});
@@ -87,20 +87,24 @@ class Todo extends Component {
         const updateListValue = toDoList.map((item, i, arr)=> (arr[i] === arr[index])?
             {value: e, check: item.check} : item);
         this.setState({toDoList: updateListValue});
+
     };
 
     onInputChangeBlur = () => {
-        this.setState({editableIndex: false})
+        this.setState({editableIndex: false});
     };
 
-    onSaveEdited =  (e) => {
-        if(e.keyCode === 13) {
-            this.onInputChangeBlur()
+    onSaveEdited =  (e,index) => {
+        if(e.keyCode === 13 && e.target.value.length !== 0) {
+            this.onInputChangeBlur();
+        } else if(e.keyCode === 13) {
+            this.onRemove(index);
+            this.onInputChangeBlur();
         }
     };
 
     render() {
-        const {value, toDoList, editableIndex} = this.state;
+        const {value, toDoList, editableIndex, filter} = this.state;
         const list  = this.filterTodos();
         const hasToDo  = !!toDoList.length;
         const counter = toDoList.filter((item)=> !item.check).length;
@@ -117,7 +121,7 @@ class Todo extends Component {
                 />
                 <ToDoList toDoList={list}
                           onChecked={this.onChecked}
-                          onRemoveButton={this.onRemoveButton}
+                          onRemove={this.onRemove}
                           onClickToggle={this.onClickToggle}
                           hasToDo={hasToDo}
                           setEditableIndex = {this.setEditableIndex}
@@ -130,6 +134,7 @@ class Todo extends Component {
                             clearCompleted={this.clearCompleted}
                             setFilter={this.setFilter}
                             counter = {counter}
+                            filter = {filter}
                 />
             </Fragment>
         );

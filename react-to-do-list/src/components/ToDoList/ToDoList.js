@@ -13,23 +13,28 @@ class ToDoList extends Component {
     };
 
     onClickRemoveButton = (index) => () => {
-        const {onRemoveButton} = this.props;
-        onRemoveButton(index);
+        const {onRemove} = this.props;
+        onRemove(index);
     };
 
     onchangeTodo = (index) =>()=> {
         const {setEditableIndex} = this.props;
         setEditableIndex(index);
     };
-    onBlurEnter =  (e) => {
-        if(e.keyCode === 13) {
-            this.onInputChangeBlur()
-        }
+
+    moveCaretAtEnd = (e) => {
+        let temp_value = e.target.value;
+        e.target.value = "";
+        e.target.value = temp_value;
     };
 
+    saveEdited = (index) => (e) =>{
+        const {onSaveEdited} = this.props;
+        onSaveEdited(e,index)
+    };
 
     render() {
-        const {toDoList, onClickToggle, hasToDo, editableIndex, onInputChangeBlur,onSaveEdited} = this.props;
+        const {toDoList, onClickToggle, hasToDo, editableIndex, onInputChangeBlur} = this.props;
         return (
             (hasToDo) ?
                 (<Fragment>
@@ -45,7 +50,9 @@ class ToDoList extends Component {
                                                                  value = {item.value}
                                                                  onChange={this.onEditableChange(index)}
                                                                  onBlur = {onInputChangeBlur}
-                                                                 onKeyDown={onSaveEdited}
+                                                                 onKeyDown={this.saveEdited(index)}
+                                                                 autoFocus
+                                                                 onFocus={this.moveCaretAtEnd}
                                                                     /> :
                                     <lable onDoubleClick={this.onchangeTodo(index)}>{item.value}</lable>
                             }

@@ -134,13 +134,21 @@ body{
     margin: 0;
     li{
       display: inline-block;
+      margin-right: 10px;
       button{
         height: 30px;
+        outline: none;
+        border-radius: 5px;
       }
+    }
+    .active-filter{
+      background: red;
     }
   }
   .clear-completed{
     height: 30px;
+    outline: none;
+    border-radius: 5px;
   }
 
 }
