@@ -2,19 +2,18 @@ import React, {Component, Fragment} from 'react';
 
 import './App.css';
 
+import ToDoList from './ToDoList';
+import ToDoFooter from './ToDoFooter';
 
-import ToDoList from './components/ToDoList/ToDoList';
-import ToDoFooter from './components/ToDoFooter/ToDoFooter';
-
-
-class Todo extends Component {
+class App extends Component {
     constructor() {
         super();
         this.state = {
             value: '',
             toDoList: [],
             filter: 'all',
-            editableIndex: null,
+            editableId: null,
+            editableText: '',
         };
     }
 
@@ -27,15 +26,13 @@ class Todo extends Component {
     addTodo = (e) => {
         const {value, toDoList: prevList} = this.state;
         if (!!value && e.keyCode === 13) {
-
             this.setState({
                 toDoList: [
                     ...prevList,
-                    {value, check: false}
+                    {value, check: false, id: (((1+Math.random())*0x10000)|0).toString(16).substring(1)}
                 ],
                 value: '',
             });
-
         }
     };
 
@@ -43,29 +40,29 @@ class Todo extends Component {
         this.setState({value: e.target.value})
     };
 
-    onChecked = (checked, index) => {
+    onChecked = (checked, id) => {
         const {toDoList} = this.state;
-        const updatedList = toDoList.map((item, i) => (i === index) ?
-            ({value: item.value, check: checked}) : item);
+        const updatedList = toDoList.map((item, i) => (item.id === id) ?
+            ({value: item.value, check: checked, id:id}) : item);
         this.setState({toDoList: updatedList});
     };
 
-    onRemove = (index) => {
+    onRemove = (id) => {
         const {toDoList} = this.state;
-        const updateList = toDoList.filter((item, i, arr) => arr[i] !== arr[index]);
+        const updateList = toDoList.filter((item) => item.id !== id);
         this.setState({toDoList: updateList});
     };
 
     onClickToggle = () => {
         const {toDoList} = this.state;
         const isUnchecked = toDoList.some((item) => item.check === false);
-        const updateList = toDoList.map((item) => ({value: item.value, check: isUnchecked}));
+        const updateList = toDoList.map((item) => ({value: item.value, check: isUnchecked, id: item.id}));
         this.setState({toDoList: updateList})
     };
 
-    filterTodos = () => {
+    filterTodos = (optionalFilter) => {
         const {filter, toDoList} = this.state;
-        return this.filters[filter](toDoList);
+        return this.filters[optionalFilter || filter](toDoList);
     };
 
     setFilter = (filter) => () =>{
@@ -75,39 +72,42 @@ class Todo extends Component {
     clearCompleted = () =>{
         const {toDoList}= this.state;
         const updateList = toDoList.filter((item) => !item.check);
-        this.setState({toDoList: updateList});
+        this.setState({toDoList: updateList, filter: 'all'});
     };
 
-    setEditableIndex = (index) =>{
-        this.setState({editableIndex: index})
+    setEditableId = (id, originText) => () =>{
+        this.setState({editableId: id, editableText:originText})
     };
 
-    editableChange = (index, e) => {
+    editableChange = (id, e) => {
         const {toDoList} = this.state;
-        const updateListValue = toDoList.map((item, i, arr)=> (arr[i] === arr[index])?
-            {value: e, check: item.check} : item);
+        const updateListValue = toDoList.map((item)=> (item.id === id)?
+            {value: e.target.value, check: item.check, id} : item);
         this.setState({toDoList: updateListValue});
-
     };
 
-    onInputChangeBlur = () => {
-        this.setState({editableIndex: false});
+    inputChangeBlur = (id) => () => {
+        const {toDoList, editableText} = this.state;
+        const returnOldValue = toDoList.map((item)=> item.id === id ? item.value = editableText: item);
+        this.setState({editableId: null, editableText: returnOldValue});
     };
 
-    onSaveEdited =  (e,index) => {
-        if(e.keyCode === 13 && e.target.value.length !== 0) {
-            this.onInputChangeBlur();
-        } else if(e.keyCode === 13) {
-            this.onRemove(index);
-            this.onInputChangeBlur();
+    onSaveEdited =  (e,id)  => {
+        if(e.key === 'Enter' && e.target.value.length !== 0) {
+            this.setState({editableId: null})
+        } else if(e.key === 'Enter' && e.target.value.length === 0) {
+            this.onRemove(id);
+            this.setState({editableId: null})
+        } else if(e.keyCode === '27'){
+            this.inputChangeBlur(id)
         }
     };
 
     render() {
-        const {value, toDoList, editableIndex, filter} = this.state;
+        const {value, toDoList, editableId, filter, active,id } = this.state;
         const list  = this.filterTodos();
         const hasToDo  = !!toDoList.length;
-        const counter = toDoList.filter((item)=> !item.check).length;
+        const counter = this.filterTodos('active').length;
 
         return (
             <Fragment>
@@ -118,17 +118,20 @@ class Todo extends Component {
                        onChange={this.onInputChange}
                        onKeyDown={this.addTodo}
                        value={value}
+                       maxLength={'450px'}
                 />
                 <ToDoList toDoList={list}
                           onChecked={this.onChecked}
                           onRemove={this.onRemove}
                           onClickToggle={this.onClickToggle}
                           hasToDo={hasToDo}
-                          setEditableIndex = {this.setEditableIndex}
-                          editableIndex = {editableIndex}
-                          onInputChangeBlur = {this.onInputChangeBlur}
+                          setEditableId = {this.setEditableId}
+                          editableId = {editableId}
+                          inputChangeBlur = {this.inputChangeBlur}
                           editableChange = {this.editableChange}
                           onSaveEdited = {this.onSaveEdited}
+                          active ={active}
+                          id={id}
                 />
                 <ToDoFooter hasToDo={hasToDo}
                             clearCompleted={this.clearCompleted}
@@ -141,4 +144,4 @@ class Todo extends Component {
     }
 }
 
-export default Todo;
+export default App;
